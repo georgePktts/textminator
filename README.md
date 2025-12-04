@@ -232,7 +232,7 @@ These results demonstrate solid real-world performance and confirm that `textmin
 
 
 ## Why textminator?
-There are other tools that manipulate text (sed, awk, grep, Perl), but:
+There are other tools that manipulate text (sed, awk, grep), but:
 
 ### 1. Regex readability
 You can describe sanitization logic in a simple configuration file—not inline,

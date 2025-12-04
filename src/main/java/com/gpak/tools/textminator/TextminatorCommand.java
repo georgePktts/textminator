@@ -37,10 +37,6 @@ public class TextminatorCommand {
         if (context == null) {
             throw new IllegalStateException("Tool context is not initialized!");
         }
-
-        context.setStartNanos(System.nanoTime());
-        context.setInteractive(Util.isInteractive(context));
-
         if (context.getConfigGroup().printConfigExample) {
             Util.printConfigExample(context);
             return ToolContext.EXIT_OK;
@@ -53,6 +49,9 @@ public class TextminatorCommand {
             Util.printRules(context);
             return ToolContext.EXIT_OK;
         }
+
+        context.setStartNanos(System.nanoTime());
+        context.setInteractive(Util.isInteractive(context));
 
         try (BufferedReader reader = createReader();
             PrintWriter writer = createWriter()) {
