@@ -16,13 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TextminatorCommand {
@@ -44,6 +39,7 @@ public class TextminatorCommand {
 
         Util.validateInputOptions(context);
         loadRules();
+        Util.validateRules(context);
 
         if (context.getConfigGroup().printConfigInfo) {
             Util.printRules(context);
@@ -53,6 +49,7 @@ public class TextminatorCommand {
         context.setStartNanos(System.nanoTime());
         context.setInteractive(Util.isInteractive(context));
 
+        Sanitizer sanitizer = new Sanitizer(context);
         try (BufferedReader reader = createReader();
             PrintWriter writer = createWriter()) {
             Console.info("Start processing");
@@ -62,7 +59,7 @@ public class TextminatorCommand {
                 context.incrementTotalNumberOfLines();
 
                 Console.trace("Sanitize line: " + context.getTotalNumberOfLines());
-                String salitizedLine = sanitizeLine(line);
+                String salitizedLine = sanitizer.sanitizeLine(line);
 
                 if (!context.getDiagnosticsGroup().isDryRun) {
                     writer.println(salitizedLine);
@@ -131,7 +128,6 @@ public class TextminatorCommand {
         }
 
         // Create rules list
-        Map<Integer, List<String>> uniqueOrder = new HashMap<>();
         for (String key : properties.stringPropertyNames()) {
             if (!key.endsWith(".regex")) {
                 continue;
@@ -169,25 +165,10 @@ public class TextminatorCommand {
             Rule rule = new Rule(baseName, Pattern.compile(regex), replacement, Integer.parseInt(orderString), enabled);
 
             context.getRules().add(rule);
-            uniqueOrder.computeIfAbsent(rule.getOrder(), k -> new ArrayList<>()).add(rule.getName());
         }
 
         if (context.getRules().size() == 0) {
             throw new IllegalStateException("No rules found in " + context.getLoadedConfigFile() + " config file!");
-        }
-
-        if (context.getRules().size() != uniqueOrder.size()) {
-            Console.warn("Multiple rules found with the same order");
-
-            for (Entry<Integer, List<String>> set : uniqueOrder.entrySet()) {
-                if (set.getValue().size() > 1) {
-                    Console.warn(set.getValue().size() + " rules have order: " + set.getKey());
-
-                    for (String s : set.getValue()) {
-                        Console.warn("  " + s);
-                    }
-                }
-            } 
         }
 
         context.getRules().sort(Comparator.comparingInt(Rule::getOrder).thenComparing(r -> r.getName()));
@@ -266,39 +247,6 @@ public class TextminatorCommand {
         }
 
         return properties;
-    }
-
-    private String sanitizeLine(String line) {
-        if (context.getRules() == null || context.getRules().isEmpty() || line == null ||line.isEmpty()) {
-            return line;
-        }
-
-        String result = line;
-        for (Rule rule : context.getRules()) {
-            Matcher matcher = rule.getPattern().matcher(result);
-            StringBuffer sb = new StringBuffer();
-            long matches = 0;
-
-            while (matcher.find()) {
-                matches++;
-                context.setMatchFound(true);
-                matcher.appendReplacement(sb, rule.getReplacement());
-            }
-
-            if (matches == 0) {
-                continue;
-            }
-
-            matcher.appendTail(sb);
-            result = sb.toString();
-
-            Console.trace("Rule: " + rule.getName() + " matched " + matches + " time(s)");
-            if (context.getDiagnosticsGroup().printStats || context.getDiagnosticsGroup().isDryRun) {
-                context.getStatistics().merge(rule.getName(), matches, Long::sum);
-            }
-        }
-
-        return result;
     }
 
     private BufferedReader createReader() throws FileNotFoundException {

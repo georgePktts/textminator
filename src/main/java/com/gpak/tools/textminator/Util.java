@@ -6,6 +6,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.FileAlreadyExistsException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class Util {
 
@@ -49,6 +54,42 @@ public class Util {
             Console.error("Output file " + context.getIoGroup().outputFile + " already exists");
             Console.error("Use --force to overwrite, or specify a different --output-file");
             throw new FileAlreadyExistsException(null);
+        }
+    }
+
+    public static void validateRules(ToolContext context) {
+        Console.debug("Validate rules");
+
+        if (context.getRules().isEmpty() || context.getRules().size() == 0) {
+            throw new IllegalStateException("No rules loaded!");
+        }
+
+        boolean atLeastOneEnabled = false;
+        Map<Integer, List<String>> uniqueOrder = new HashMap<>();
+        for (Rule rule : context.getRules()) {
+            if (rule.isEnabled()) {
+                atLeastOneEnabled = true;
+            }
+
+            uniqueOrder.computeIfAbsent(rule.getOrder(), k -> new ArrayList<>()).add(rule.getName());
+        }
+
+        if (!atLeastOneEnabled) {
+            throw new IllegalAccessError("All rules are disbled!");
+        }
+
+        if (context.getRules().size() != uniqueOrder.size()) {
+            Console.warn("Multiple rules found with the same order");
+
+            for (Entry<Integer, List<String>> set : uniqueOrder.entrySet()) {
+                if (set.getValue().size() > 1) {
+                    Console.warn(set.getValue().size() + " rules have order: " + set.getKey());
+
+                    for (String s : set.getValue()) {
+                        Console.warn("  " + s);
+                    }
+                }
+            }
         }
     }
 
