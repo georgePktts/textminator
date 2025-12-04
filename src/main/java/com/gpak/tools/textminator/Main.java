@@ -364,9 +364,9 @@ public class Main implements Callable<Integer> {
             properties = loadFolderConfigFile();
         }
 
-        // 4. Fallback to internal config file
+        // 4. Fallback to built-in config file
         if (properties == null) {
-            Console.warn("Fallback to internal config file");
+            Console.warn("Fallback to built-in config file");
             properties = loadDefaultConfigFile();
         }
 
@@ -448,7 +448,7 @@ public class Main implements Callable<Integer> {
     }
 
     /**
-     * Prints the internal config file to stdout
+     * Prints the built-in config file to stdout
      */
     private void printConfigExample() {
         Console.debug("Print config example");
@@ -495,7 +495,7 @@ public class Main implements Callable<Integer> {
         Console.config("Config source: " + 
                         (loadedConfigFile != null
                             ? loadedConfigFile.getAbsolutePath()
-                            : "default (internal)"));
+                            : "default (built-in)"));
 
         Console.config("");
         Console.config("Loaded rules in execution order:");
@@ -563,17 +563,17 @@ public class Main implements Callable<Integer> {
     }
 
     private Properties loadDefaultConfigFile() {
-        Console.debug("Loading internal config file...");
+        Console.debug("Loading built-in config file...");
         Properties properties = new Properties();
 
         try (InputStream in = Main.class.getResourceAsStream("/" + DEFAULT_CONFIG_FILE_NAME)) {
             if (in != null) {
                 properties.load(in);
             } else {
-                throw new IllegalStateException("No internal config file found on classpath.");
+                throw new IllegalStateException("No built-in config file found on classpath.");
             }
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to load internal config file: " + e.getMessage());
+            throw new IllegalStateException("Failed to load built-in config file: " + e.getMessage());
         }
 
         return properties;
