@@ -145,7 +145,7 @@ ipv6.enabled=true
 ### Configuration file locations
 
 `textminator` will use the following paths in order to load config file
-1. --config option
+1. `--config` option
 2. `textminator.properties` file next to .jar
 3. default file
 
@@ -161,7 +161,7 @@ ipv6.enabled=true
 1. Predictability over magical behavior
 Rules apply strictly in numeric order and never overlap unexpectedly.
 2. Transparency
---stats, --dry-run, and --trace are designed to show exactly how the tool behaves.
+`--stats`, `--dry-run`, and `--trace` are designed to show exactly how the tool behaves.
 3. Minimal dependencies
 Only standard Java & Picocli are used.
 4. Fail-fast
@@ -171,7 +171,7 @@ Same output on macOS, Linux, and Windows.
 Performance Notes
 The tool loads all rules into memory once and applies them sequentially.
 Regex performance depends on complexity of user-defined expressions.
---trace dramatically slows down processing (intended for debugging only).
+`--trace` dramatically slows down processing (intended for debugging only).
 Piping through stdin avoids I/O overhead for large files.
 For extremely large files, prefer streaming via stdin:
 cat huge.log | textminator > sanitized.log
