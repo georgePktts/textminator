@@ -96,7 +96,7 @@ public class Main implements Callable<Integer> {
         order = 3)
     DiagnosticsGroup diagnosticsGroup = new DiagnosticsGroup();
 
-    static class ConfigGroup {
+    public static class ConfigGroup {
         @Option(names = {"-c", "--config"},
             description = {"path to custom config file", "  default: ${COMMAND-NAME}.properties next to the jar"})
         File userConfigFile;
@@ -110,7 +110,7 @@ public class Main implements Callable<Integer> {
         boolean printConfigInfo;
     }
 
-    static class IOGroup {
+    public static class IOGroup {
         @Option(names = {"-i", "--input"},
             description = {"input file", "  default: stdin"})
         File inputFile;
@@ -124,7 +124,7 @@ public class Main implements Callable<Integer> {
         boolean overwriteOutputFile;
     }
 
-    static class DiagnosticsGroup {
+    public static class DiagnosticsGroup {
         @Option(names = {"-s", "--stats"},
             description = "print per-rule match statistics after processing")
         boolean printStats;
