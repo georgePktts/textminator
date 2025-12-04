@@ -1,5 +1,5 @@
-textminator
------------
+textminator (txmtr)
+-------------------
 
 `textminator` is a Java-based command-line tool that sanitizes sensitive data
 from text files or streams. It is designed for developers, DevOps engineers,
@@ -7,23 +7,23 @@ and teams handling logs or raw text that may contain private or regulated
 information such as emails, IP addresses, UUIDs, or any custom pattern.
 
 It supports piping, file-to-file processing, configurable rule sets, detailed
-diagnostics, and multiple verbosity levels.  
+diagnostics, and multiple verbosity levels.
 By using a simple `.properties` configuration model, users can define custom
 regex-based transformations without modifying or recompiling the tool.
 
 
 ## Features
-- **Regex-driven sanitization** through a simple `.properties` file  
-- **File input/output** with overwrite protection  
-- **stdin pipeline support** (`cat logs | textminator`)  
-- **Dry-run mode** to preview replacements  
-- **Per-rule statistics** (`--stats`)  
-- **Verbose and debug modes** (up to `-vvv`)  
-- **Low-level tracing** of rule matches (`--trace`)  
-- **Config inspection** (`--config-info`, `--config-example`)  
-- **Colorized output**, automatically disabled when piped  
-- **Interactive mode exit** using Ctrl+D (Unix) or Ctrl+Z (Windows)  
-- **Easily extensible** with new rules—no code changes required  
+- **Regex-driven sanitization** through a simple `.properties` file
+- **File input/output** with overwrite protection
+- **stdin pipeline support** (`cat logs | txmtr`)
+- **Dry-run mode** to preview replacements
+- **Per-rule statistics** (`--stats`)
+- **Verbose and debug modes** (up to `-vvv`)
+- **Low-level tracing** of rule matches (`--trace`)
+- **Config inspection** (`--config-info`, `--config-example`)
+- **Colorized output**, automatically disabled when piped
+- **Interactive mode exit** using Ctrl+D (Unix) or Ctrl+Z (Windows)
+- **Easily extensible** with new rules—no code changes required
 
 
 ## Installation
@@ -40,6 +40,13 @@ mvn clean package
 
 
 ## Usage
+### Command syntax (from `--help`)
+```bash
+textminator [[-c=<userConfigFile>] [--config-example] [--config-info]]
+            [[-i=<inputFile>] [-o=<outputFile>] [-f]] [[-s] [--dry-run]
+            [-q] [-v]... [--trace] [-h] [-V]]
+```
+
 ### Run directly
 ```bash
 java -jar textminator.jar
@@ -47,12 +54,17 @@ java -jar textminator.jar
 
 ### Or create a shell alias
 ```bash
-alias textminator="java -jar ~/path/to/textminator.jar"
+alias textminator="java -jar /path/to/textminator.jar"
+```
+
+### For convenience, you can create a short alias:
+```bash
+alias tmxtr="java -jar /path/to/textminator.jar"
 ```
 
 #### Then you can simply run:
 ```bash
-textminator -i input.txt -o output.txt
+txmtr -i input.txt -o output.txt
 ```
 
 ## Input Options
@@ -89,32 +101,32 @@ textminator -i input.txt -o output.txt
 ## Examples
 Process text from stdin to stdout
 ```bash
-cat input.txt | textminator
+cat input.txt | txmtr
 ```
 
 Sanitize a file to stdout
 ```bash
-textminator -i input.txt
+txmtr -i input.txt
 ```
 
 Sanitize and write to a file
 ```bash
-textminator -i input.txt -o clean.txt
+txmtr -i input.txt -o clean.txt
 ```
 
 Preview replacements (dry-run)
 ```bash
-textminator --dry-run -i input.txt
+txmtr --dry-run -i input.txt
 ```
 
 Show per-rule statistics
 ```bash
-textminator --stats -i input.txt
+txmtr --stats -i input.txt
 ```
 
 Use a custom config file
 ```bash
-textminator --config myrules.properties -i input.txt
+txmtr --config myrules.properties -i input.txt
 ```
 
 
@@ -145,12 +157,16 @@ uuid.replacement=<UUID>
 uuid.order=2
 uuid.enabled=true
 
-ipv4.regex=\b(?:\d{1,3}\.){3}\d{1,3}\b
+ipv4.regex=\b(?:(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\b
 ipv4.replacement=<IPv4>
 ipv4.order=3
 ipv4.enabled=true
 
-ipv6.regex=\b[0-9a-fA-F:]{2,39}\b
+# Default: fast & broad IPv6 detection
+ipv6.regex=\\b[0-9a-fA-F:]{2,39}\\b
+# Alternative: stricter RFC-like IPv6
+# NOTE: This is significantly slower (~40–50% slower in benchmarks)
+#ipv6.regex=\b(?:fe80:(?::[0-9A-Fa-f]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(?:ffff(?::0{1,4}){0,1}:){0,1}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}|(?:[0-9A-Fa-f]{1,4}:){1,4}:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}|(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?:(?::[0-9A-Fa-f]{1,4}){1,6})|:(?:(?::[0-9A-Fa-f]{1,4}){1,7}|:))\b
 ipv6.replacement=<IPV6>
 ipv6.order=4
 ipv6.enabled=true
