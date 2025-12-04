@@ -46,19 +46,29 @@ import picocli.CommandLine.Option;
         "%n" +
         "The tool is fully extensible through a configuration file, allowing "+
         "users to define custom regex patterns and replacement values to " +
-        "replace any type of text." +
+        "replace any type of text.%n" +
         "%n" +
+        "@|bold Configuration:|@%n" +
+        "The tool uses the following order when loading the config file:" +
         "%n" +
-        "Verbosity controls the amount of diagnostic output produced during execution." +
+        "  custom      use file provided via --config%n" +
+        "  jar         search for ${COMMAND-NAME}.properties next to the JAR%n" +
+        "  (default)   built-in configuration file%n" +
         "%n" +
-        "  (default)   only errors are printed. Execution stops on the first error.%n" +
-        "  -v          show warnings.%n" +
-        "  -vv         show informational messages.%n" +
-        "  -vvv        enable debug logging (includes full stack traces).%n" +
+        "To inspect the final loaded configuration with the --config-info option.%n" +
         "%n" +
-        "The --trace option provides low-level rule tracing for the sanitization " +
-        "process. It operates independently of -v and produces extremely verbose " +
-        "output, significantly affecting performance.",
+        "@|bold Logging:|@%n" +
+        "Verbosity controls the amount of diagnostic output:" +
+        "%n" +
+        "  (default)   only errors are printed. Execution stops on the first error%n" +
+        "  -v          show warnings%n" +
+        "  -vv         show informational messages%n" +
+        "  -vvv        enable debug logging (includes full stack traces)%n" +
+        "%n" +
+        "The --trace option provides low-level rule tracing operates independently " +
+        "of -v.%n" +
+        "Warning: This option produces extremely verbose output, significantly " +
+        "affecting performance",
     optionListHeading = "%n@|bold Options:|@",
     sortOptions = false,
     footerHeading = "%n@|bold Examples:|@%n",
