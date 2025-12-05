@@ -142,7 +142,7 @@ public class ConfigUtil {
                 continue;
             }
 
-            String replacement = properties.getProperty(baseName + ".replacement");
+            String replacement = properties.getProperty(baseName + ".replacement", ToolContext.DEFUALT_REPLACEMENT_VALUE);
             String enabledString = properties.getProperty(baseName + ".enabled");
             String orderString = properties.getProperty(baseName + ".order");
 
@@ -153,7 +153,6 @@ public class ConfigUtil {
             if (ToolContext.DEFUALT_REPLACEMENT_VALUE.equals(replacement)) {
                 Console.warn("Property replacement is missing from: " + baseName);
                 Console.warn("Using default value of " + ToolContext.DEFUALT_REPLACEMENT_VALUE);
-                replacement = ToolContext.DEFUALT_REPLACEMENT_VALUE;
             }
 
             boolean enabled = true;
