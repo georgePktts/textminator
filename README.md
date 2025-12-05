@@ -232,7 +232,7 @@ time textminator -i big_test_file.log -o output.log -sf
 Note: Benchmark numbers may vary depending on JVM version, system load and OS-level caching.
 
 ### Interpretation
-- Total (real) time: 208.9 s
+- Total (real) time: 206.7 s
 - User CPU time: ~200 s → the majority of the processing time is spent inside the regex engine
 - System time: ~4.7 s → very low I/O overhead
 - CPU usage: 98% → the process fully saturates a single CPU core

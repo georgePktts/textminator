@@ -1,8 +1,4 @@
-package com.gpak.tools.textminator;
-
-import java.io.File;
-import java.util.List;
-import java.util.Map;
+package com.gpak.tools.textminator.core;
 
 import com.gpak.tools.textminator.Main.ConfigGroup;
 import com.gpak.tools.textminator.Main.DiagnosticsGroup;
@@ -24,17 +20,9 @@ public class ToolContext {
     private final DiagnosticsGroup diagnosticsGroup;
 
     // Variables
-    private List<Rule> rules;
-    private Map<String, Long> statistics;
-
-    private boolean matchFound = false;
     private boolean isInteractive = false;
     
-    private File tempOutputFile = null;
-    private File loadedConfigFile = null;
-
     private long startNanos = 0;
-    private long elapsedNanos = 0;
     private long totalNumberOfLines = 0;
 
     public ToolContext(ConfigGroup configGroup, IOGroup ioGroup, DiagnosticsGroup diagnosticsGroup) {
@@ -61,30 +49,6 @@ public class ToolContext {
         return diagnosticsGroup;
     }
 
-    public List<Rule> getRules() {
-        return rules;
-    }
-
-    public void setRules(List<Rule> rules) {
-        this.rules = rules;
-    }
-
-    public Map<String, Long> getStatistics() {
-        return statistics;
-    }
-
-    public void setStatistics(Map<String, Long> statistics) {
-        this.statistics = statistics;
-    }
-
-    public boolean isMatchFound() {
-        return matchFound;
-    }
-
-    public void setMatchFound(boolean matchFound) {
-        this.matchFound = matchFound;
-    }
-
     public boolean isInteractive() {
         return isInteractive;
     }
@@ -93,36 +57,12 @@ public class ToolContext {
         this.isInteractive = isInteractive;
     }
 
-    public File getTempOutputFile() {
-        return tempOutputFile;
-    }
-
-    public void setTempOutputFile(File tempOutputFile) {
-        this.tempOutputFile = tempOutputFile;
-    }
-
-    public File getLoadedConfigFile() {
-        return loadedConfigFile;
-    }
-
-    public void setLoadedConfigFile(File loadedConfigFile) {
-        this.loadedConfigFile = loadedConfigFile;
-    }
-
     public long getStartNanos() {
         return startNanos;
     }
 
     public void setStartNanos(long startNanos) {
         this.startNanos = startNanos;
-    }
-
-    public long getElapsedNanos() {
-        return elapsedNanos;
-    }
-
-    public void setElapsedNanos(long elapsedNanos) {
-        this.elapsedNanos = elapsedNanos;
     }
 
     public long getTotalNumberOfLines() {

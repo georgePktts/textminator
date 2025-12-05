@@ -1,7 +1,12 @@
 package com.gpak.tools.textminator;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.Callable;
+
+import com.gpak.tools.textminator.core.ToolContext;
+import com.gpak.tools.textminator.util.Console;
+import com.gpak.tools.textminator.util.VersionProvider;
 
 import picocli.CommandLine;
 import picocli.CommandLine.ArgGroup;
@@ -166,15 +171,16 @@ public class Main implements Callable<Integer> {
     public Integer call() {
         int statusCode = ToolContext.EXIT_OK;
 
-        // Initialize console
-        Console.setQuiet(diagnosticsGroup.isQuiet);
-        Console.setTrace(diagnosticsGroup.isTrace);
-        Console.setVerbose(diagnosticsGroup.verbose);
-
-        // Initialize tool context
-        ToolContext context = new ToolContext(configGroup, ioGroup, diagnosticsGroup);
-
         try {
+            // Initialize console
+            Console.setQuiet(diagnosticsGroup.isQuiet);
+            Console.setTrace(diagnosticsGroup.isTrace);
+            Console.setVerbose(diagnosticsGroup.verbose);
+
+            // Initialize tool context
+            ToolContext context = new ToolContext(configGroup, ioGroup, diagnosticsGroup);
+            context.setInteractive(isInteractive());
+
             TextminatorCommand command = new TextminatorCommand(context);
             statusCode = command.executeCommand();
         } catch (Exception e) {
@@ -186,5 +192,27 @@ public class Main implements Callable<Integer> {
         }
 
         return statusCode;
+    }
+
+    private static boolean isInteractive() {
+        Console.debug("Check if is in interactive mode");
+
+        try {
+            // pipe or redirect => stdin has data
+            if (System.in.available() > 0) {
+                Console.debug("Not in interactive mode. Pipe or redirect");
+                return false;
+            }
+        } catch (IOException ignored) {}
+
+        // console exists => interactive terminal
+        if (System.console() != null) {
+            Console.debug("It's in interactive mode. Terminal");
+            return true;
+        }
+
+        // fallback: very likely piped/redirected
+        Console.debug("Not in interactive mode. Pipe or redirect");
+        return false;
     }
 }

@@ -1,4 +1,6 @@
-package com.gpak.tools.textminator;
+package com.gpak.tools.textminator.util;
+
+import com.gpak.tools.textminator.Main;
 
 import picocli.CommandLine;
 

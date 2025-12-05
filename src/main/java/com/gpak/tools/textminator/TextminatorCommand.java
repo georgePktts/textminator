@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -14,15 +13,20 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.Properties;
-import java.util.regex.Pattern;
+import java.util.List;
+
+import com.gpak.tools.textminator.core.Sanitizer;
+import com.gpak.tools.textminator.core.ToolContext;
+import com.gpak.tools.textminator.model.LineResult;
+import com.gpak.tools.textminator.model.Rule;
+import com.gpak.tools.textminator.util.ConfigUtil;
+import com.gpak.tools.textminator.util.Console;
+import com.gpak.tools.textminator.util.PrintUtil;
 
 public class TextminatorCommand {
 
-    ToolContext context;
+    private ToolContext context;
+    private boolean matchFound = false;
 
     public TextminatorCommand(ToolContext context) {
         this.context = context;
@@ -32,26 +36,27 @@ public class TextminatorCommand {
         if (context == null) {
             throw new IllegalStateException("Tool context is not initialized!");
         }
+
         if (context.getConfigGroup().printConfigExample) {
-            Util.printConfigExample(context);
+            PrintUtil.printConfigExample();
             return ToolContext.EXIT_OK;
         }
 
-        Util.validateInputOptions(context);
-        loadRules();
-        Util.validateRules(context);
+        ConfigUtil.validateInputOptions(context.getIoGroup().outputFile, context.getIoGroup().overwriteOutputFile);
+        List<Rule> rules = ConfigUtil.loadConfigFile(context.getConfigGroup().userConfigFile);
 
         if (context.getConfigGroup().printConfigInfo) {
-            Util.printRules(context);
+            PrintUtil.printRules(rules, context.getConfigGroup().userConfigFile);
             return ToolContext.EXIT_OK;
         }
 
         context.setStartNanos(System.nanoTime());
-        context.setInteractive(Util.isInteractive(context));
 
-        Sanitizer sanitizer = new Sanitizer(context);
-        try (BufferedReader reader = createReader();
-            PrintWriter writer = createWriter()) {
+        Sanitizer sanitizer = new Sanitizer(rules,
+                                            context.getDiagnosticsGroup().isDryRun,
+                                            context.getDiagnosticsGroup().printStats);
+        try (BufferedReader reader = createReader(context.getIoGroup().inputFile);
+            PrintWriter writer = createWriter(context.getIoGroup().outputFile)) {
             Console.info("Start processing");
 
             String line;
@@ -59,10 +64,14 @@ public class TextminatorCommand {
                 context.incrementTotalNumberOfLines();
 
                 Console.trace("Sanitize line: " + context.getTotalNumberOfLines());
-                String salitizedLine = sanitizer.sanitizeLine(line);
+                LineResult lineResult = sanitizer.sanitizeLine(line);
 
                 if (!context.getDiagnosticsGroup().isDryRun) {
-                    writer.println(salitizedLine);
+                    writer.println(lineResult.getLine());
+                }
+
+                if (lineResult.isChanged()) {
+                    matchFound = true;
                 }
             }
 
@@ -70,7 +79,7 @@ public class TextminatorCommand {
                 throw new IllegalStateException("Input was empty!");
             }
 
-            if (!context.isMatchFound()) {
+            if (!matchFound) {
                 throw new IllegalStateException("No match found!");
             }
 
@@ -86,180 +95,36 @@ public class TextminatorCommand {
                                         StandardCopyOption.ATOMIC_MOVE }
                     : new CopyOption[] { StandardCopyOption.ATOMIC_MOVE };
                 
-                Files.move(context.getTempOutputFile().toPath(), context.getIoGroup().outputFile.toPath(), copyOptions);
+                Files.move(tempFileFor(context.getIoGroup().outputFile).toPath(), context.getIoGroup().outputFile.toPath(), copyOptions);
             } catch (IOException e) {
                 throw new IOException("Failed to move temporary file to output: " + e.getMessage());
             }
         }
 
         if (context.getDiagnosticsGroup().printStats || context.getDiagnosticsGroup().isDryRun) {
-            context.setElapsedNanos(System.nanoTime() - context.getStartNanos());
-            Util.printStatsSummary(context);
+            long elapsedNanos = System.nanoTime() - context.getStartNanos();
+            PrintUtil.printStatsSummary(sanitizer.getStatistics(), elapsedNanos, context.getTotalNumberOfLines());
         }
 
         return ToolContext.EXIT_OK;
     }
 
-    private void loadRules() {
-        Console.info("Load rules");
-
-        context.setRules(new ArrayList<>());
-        Properties properties = null;
-
-        // 1. Load rules from user config file if provided
-        if (context.getConfigGroup().userConfigFile != null) {
-            properties = loadUserConfigFile();
-        }
-
-        // 3. Load from textminator.properties next to the jar
-        if (properties == null) {
-            properties = loadFolderConfigFile();
-        }
-
-        // 4. Fallback to built-in config file
-        if (properties == null) {
-            Console.warn("Fallback to built-in config file");
-            properties = loadDefaultConfigFile();
-        }
-
-        // If no properties found then throw an exception
-        if (properties == null) {
-            throw new IllegalStateException("No config file found!");
-        }
-
-        // Create rules list
-        for (String key : properties.stringPropertyNames()) {
-            if (!key.endsWith(".regex")) {
-                continue;
-            }
-
-            String baseName = key.substring(0, key.length() - ".regex".length());
-            String regex = properties.getProperty(baseName + ".regex");
-
-            if (regex == null || regex.isEmpty()) {
-                continue;
-            }
-
-            String replacement = properties.getProperty(baseName + ".replacement");
-            String enabledString = properties.getProperty(baseName + ".enabled");
-            String orderString = properties.getProperty(baseName + ".order");
-
-            if (orderString == null) {
-                throw new IllegalStateException("order is missing from rule: " + baseName);
-            }
-
-            if (ToolContext.DEFUALT_REPLACEMENT_VALUE.equals(replacement)) {
-                Console.warn("Property replacement is missing from: " + baseName);
-                Console.warn("Using default value of " + ToolContext.DEFUALT_REPLACEMENT_VALUE);
-                replacement = ToolContext.DEFUALT_REPLACEMENT_VALUE;
-            }
-
-            boolean enabled = true;
-            if (enabledString == null) {
-                Console.warn("Property enabled is missing");
-                Console.warn("Using default value of " + true);
-            } else {
-                enabled = Boolean.valueOf(enabledString);
-            }
-            
-            Rule rule = new Rule(baseName, Pattern.compile(regex), replacement, Integer.parseInt(orderString), enabled);
-
-            context.getRules().add(rule);
-        }
-
-        if (context.getRules().size() == 0) {
-            throw new IllegalStateException("No rules found in " + context.getLoadedConfigFile() + " config file!");
-        }
-
-        context.getRules().sort(Comparator.comparingInt(Rule::getOrder).thenComparing(r -> r.getName()));
-
-        Console.info("Initialize statistics");
-        context.setStatistics(new LinkedHashMap<>());
-        for (Rule r : context.getRules()) {
-            context.getStatistics().put(r.getName(), 0L);
-        }
-
-        Console.info("Rules loaded");
-    }
-
-    private Properties loadUserConfigFile() {
-        Console.debug("Loading custom config file...");
-        Properties properties = new Properties();
-
-        if (!context.getConfigGroup().userConfigFile.exists()) {
-            throw new IllegalStateException("Config file not found: " + context.getConfigGroup().userConfigFile.getAbsolutePath());
-        }
-
-        try (InputStream in = new FileInputStream(context.getConfigGroup().userConfigFile)) {
-            properties.load(in);
-            context.setLoadedConfigFile(context.getConfigGroup().userConfigFile);
-        } catch (IOException e) {
-            throw new IllegalStateException("Failed to load custom config file: " + e.getMessage());
-        }
-
-        if (properties.size() == 0) {
-            throw new IllegalStateException("Custom config file doesn't contains any rules!");
-        }
-
-        return properties;
-    }
-
-    private Properties loadFolderConfigFile() {
-        Console.debug("Loading config file next to jar...");
-        Properties properties = new Properties();
-
-        try {
-            File jarFile = new File(Main.class
-                .getProtectionDomain()
-                .getCodeSource()
-                .getLocation()
-                .toURI());
-
-            File defaultConfig = new File(jarFile.getParentFile(), ToolContext.DEFAULT_CONFIG_FILE_NAME);
-            if (defaultConfig.exists()) {
-                try (InputStream in = new FileInputStream(defaultConfig)) {
-                    properties.load(in);
-                    context.setLoadedConfigFile(defaultConfig);
-                }
-            } else {
-                properties = null;
-                context.setLoadedConfigFile(null);
-            }
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to load next to jar config file: " + e.getMessage());
-        }
-
-        return properties;
-    }
-
-    private Properties loadDefaultConfigFile() {
-        Console.debug("Loading built-in config file...");
-        Properties properties = new Properties();
-
-        try (InputStream in = Main.class.getResourceAsStream("/" + ToolContext.DEFAULT_CONFIG_FILE_NAME)) {
-            if (in != null) {
-                properties.load(in);
-            } else {
-                throw new IllegalStateException("No built-in config file found on classpath.");
-            }
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to load built-in config file: " + e.getMessage());
-        }
-
-        return properties;
-    }
-
-    private BufferedReader createReader() throws FileNotFoundException {
-        if (context.getIoGroup().inputFile != null) {
-            return new BufferedReader(new InputStreamReader(new FileInputStream(context.getIoGroup().inputFile), StandardCharsets.UTF_8));
+    private BufferedReader createReader(File inputFile) throws FileNotFoundException {
+        if (inputFile != null) {
+            return new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), StandardCharsets.UTF_8));
         }
         return new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
     }
 
-    private PrintWriter createWriter() throws FileNotFoundException {
-        if (context.getIoGroup().outputFile != null) {
-            return new PrintWriter(new OutputStreamWriter(new FileOutputStream(context.getTempOutputFile()), StandardCharsets.UTF_8), false);
+    private PrintWriter createWriter(File outputFile) throws FileNotFoundException {
+        if (outputFile != null) {
+            File tempOutputFile = tempFileFor(outputFile);
+            return new PrintWriter(new OutputStreamWriter(new FileOutputStream(tempOutputFile), StandardCharsets.UTF_8), false);
         }
         return new PrintWriter(new OutputStreamWriter(System.out, StandardCharsets.UTF_8), true);
+    }
+
+    private File tempFileFor(File outputFile) {
+        return new File(outputFile.getAbsolutePath() + ".tmp");
     }
 }

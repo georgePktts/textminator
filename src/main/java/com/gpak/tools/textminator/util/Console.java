@@ -1,4 +1,4 @@
-package com.gpak.tools.textminator;
+package com.gpak.tools.textminator.util;
 
 import picocli.CommandLine.Help.Ansi;
 

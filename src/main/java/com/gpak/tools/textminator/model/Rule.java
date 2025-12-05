@@ -1,4 +1,4 @@
-package com.gpak.tools.textminator;
+package com.gpak.tools.textminator.model;
 
 import java.util.regex.Pattern;
 

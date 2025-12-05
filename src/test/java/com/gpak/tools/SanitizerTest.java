@@ -3,10 +3,8 @@ package com.gpak.tools;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.gpak.tools.textminator.Rule;
-import com.gpak.tools.textminator.Sanitizer;
-import com.gpak.tools.textminator.ToolContext;
-import com.gpak.tools.textminator.Main.DiagnosticsGroup;
+import com.gpak.tools.textminator.core.Sanitizer;
+import com.gpak.tools.textminator.model.Rule;
 
 import java.util.ArrayList;
 import java.util.regex.Pattern;
@@ -15,9 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SanitizerTest {
 
-    private ToolContext context;
     private Sanitizer sanitizer;
-    private DiagnosticsGroup diagnosticsGroup;
 
     @BeforeEach
     void setUp() {
@@ -33,10 +29,7 @@ class SanitizerTest {
         rules.add(ipv4);
         rules.add(ipv6);
 
-        diagnosticsGroup = new DiagnosticsGroup();
-        context = new ToolContext(null, null, diagnosticsGroup);
-        context.setRules(rules);
-        sanitizer = new Sanitizer(context);
+        sanitizer = new Sanitizer(rules, false, false);
     }
 
     @Test
@@ -46,7 +39,7 @@ class SanitizerTest {
                        "ipv6 2001:0db8:0000:0000:0000:ff00:0042:8329";
 
         String expected = "user <EMAIL> from <IPV4> uuid <UUID> ipv6 <IPV6>";
-        assertEquals(expected, sanitizer.sanitizeLine(input));
+        assertEquals(expected, sanitizer.sanitizeLine(input).getLine());
     }
 
     @Test
@@ -54,7 +47,7 @@ class SanitizerTest {
         String input = "user john.doe@example.com";
         String expected = "user <EMAIL>";
 
-        assertEquals(expected, sanitizer.sanitizeLine(input));
+        assertEquals(expected, sanitizer.sanitizeLine(input).getLine());
     }
 
     @Test
@@ -62,7 +55,7 @@ class SanitizerTest {
         String input = "Oh look! A UUID! 123e4567-e89b-12d3-a456-426614174000";
         String expected = "Oh look! A UUID! <UUID>";
 
-        assertEquals(expected, sanitizer.sanitizeLine(input));
+        assertEquals(expected, sanitizer.sanitizeLine(input).getLine());
     }
 
     @Test
@@ -70,7 +63,7 @@ class SanitizerTest {
         String input = "And this is an 12.23.45.67";
         String expected = "And this is an <IPV4>";
 
-        assertEquals(expected, sanitizer.sanitizeLine(input));
+        assertEquals(expected, sanitizer.sanitizeLine(input).getLine());
     }
 
     @Test
@@ -78,7 +71,7 @@ class SanitizerTest {
         String input = "And this is an ip v6 2001:0db8:0000:0000:0000:ff00:0042:8329";
         String expected = "And this is an ip v6 <IPV6>";
 
-        assertEquals(expected, sanitizer.sanitizeLine(input));
+        assertEquals(expected, sanitizer.sanitizeLine(input).getLine());
     }
 
     @Test
@@ -87,34 +80,27 @@ class SanitizerTest {
         
         ArrayList<Rule> rules = new ArrayList<>();
         rules.add(email);
-        
-        ToolContext contextRuleDisbaled = new ToolContext(null, null, diagnosticsGroup);
-        contextRuleDisbaled.setRules(rules);
 
-        Sanitizer sanitizerRuleDisabled = new Sanitizer(contextRuleDisbaled);
+        Sanitizer sanitizerRuleDisabled = new Sanitizer(rules, false, false);
 
         String input = "user john.doe@example.com";
         String expected = "user john.doe@example.com";
 
-        assertEquals(expected, sanitizerRuleDisabled.sanitizeLine(input));
+        assertEquals(expected, sanitizerRuleDisabled.sanitizeLine(input).getLine());
     }
 
     @Test
     void sanitizesRfcIpV6() {
         Rule ipv6  = new Rule("ipv6",  Pattern.compile("\\b(?:fe80:(?::[0-9A-Fa-f]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(?:ffff(?::0{1,4}){0,1}:){0,1}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}|(?:[0-9A-Fa-f]{1,4}:){1,4}:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}|(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?:(?::[0-9A-Fa-f]{1,4}){1,6})|:(?:(?::[0-9A-Fa-f]{1,4}){1,7}|:))\\b"), "<IPV6>", 1, true);
-
         
         ArrayList<Rule> rules = new ArrayList<>();
         rules.add(ipv6);
-        
-        ToolContext contextRfcIpV6 = new ToolContext(null, null, diagnosticsGroup);
-        contextRfcIpV6.setRules(rules);
 
-        Sanitizer sanitizerRfcIpV6 = new Sanitizer(contextRfcIpV6);
+        Sanitizer sanitizerRfcIpV6 = new Sanitizer(rules, false, false);
 
         String input = "And this is an ip v6 fe80::7:8%eth0 ip.add.re.ss";
         String expected = "And this is an ip v6 <IPV6> ip.add.re.ss";
 
-        assertEquals(expected, sanitizerRfcIpV6.sanitizeLine(input));
+        assertEquals(expected, sanitizerRfcIpV6.sanitizeLine(input).getLine());
     }
 }
