@@ -59,7 +59,7 @@ alias textminator="java -jar /path/to/textminator.jar"
 
 ### For convenience, you can create a short alias:
 ```bash
-alias tmxtr="java -jar /path/to/textminator.jar"
+alias txmtr="java -jar /path/to/textminator.jar"
 ```
 
 #### Then you can simply run:
@@ -224,15 +224,13 @@ The following benchmark was executed on a MacBook Pro M1 (16GB RAM) using a synt
 
 ### Command used:
 ```bash
-time textminator -i big_test_file.log -o output.log -sf
+time txmtr -i big_test_file.log -o output.log -sf
 ```
-
 ### Results
 ![textminator stats](assets/images/stats.png)
 **Note:** Benchmark numbers may vary depending on JVM version, system load and OS-level caching.<br>
 **Benchmark environment:** macOS 15, MacBook Pro M1 (16GB), OpenJDK 23. `txtminator` started with default rules.<br>
 **Benchmark configuration:** `txtminator` running with the 4 default rules (email, UUID, IPv4, IPv6)<br>
-**Dataset:** Generated 5M-line file containing emails, UUIDs, IPv4 & IPv6 addresses.
 
 ### Interpretation
 - Total (real) time: 206.7 s
