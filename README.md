@@ -229,14 +229,17 @@ time textminator -i big_test_file.log -o output.log -sf
 
 ### Results
 ![textminator stats](assets/images/stats.png)
-Note: Benchmark numbers may vary depending on JVM version, system load and OS-level caching.
+**Note:** Benchmark numbers may vary depending on JVM version, system load and OS-level caching.<br>
+**Benchmark environment:** macOS 15, MacBook Pro M1 (16GB), OpenJDK 23. `txtminator` started with default rules.<br>
+**Benchmark configuration:** `txtminator` running with the 4 default rules (email, UUID, IPv4, IPv6)<br>
+**Dataset:** Generated 5M-line file containing emails, UUIDs, IPv4 & IPv6 addresses.
 
 ### Interpretation
 - Total (real) time: 206.7 s
 - User CPU time: ~200 s → the majority of the processing time is spent inside the regex engine
-- System time: ~4.7 s → very low I/O overhead
-- CPU usage: 98% → the process fully saturates a single CPU core
-- End-to-end throughput: ~10.3 MB/s
+- System time: ~4.4 s → very low I/O overhead
+- CPU usage: 98% → fully saturates one CPU core (single-threaded stream processing)
+- End-to-end throughput: ~10.4 MiB/s
 - Lines processed: ~24,000 lines/s
 - Total regex operations: >10 million replacements
 
