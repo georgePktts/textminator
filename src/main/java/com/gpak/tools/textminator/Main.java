@@ -139,7 +139,7 @@ public class Main implements Callable<Integer> {
         boolean isDryRun;
 
         @Option(names = {"-q", "--quiet"},
-            description = "suppress all diagnostic print (including --stats and --config-info), except for errors. Overrides -v")
+            description = "suppress all diagnostic print (including --stats and --config-info). Overrides -v")
         boolean isQuiet;
 
         @Option(names = "-v",

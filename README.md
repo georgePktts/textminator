@@ -87,7 +87,7 @@ txmtr -i input.txt -o output.txt
 |------|-----------|
 |`-s, --stats`|Print per-rule match statistics after processing|
 |`--dry-run`|Same as --stats but without writing output|
-|`-q, --quiet`|Suppress all diagnostic output except errors|
+|`-q, --quiet`|Suppress all diagnostic output including errors|
 |`-v`|Increase verbosity; repeat up to 3 times (-vvv)|
 |`--trace`|Very verbose low-level rule tracing (independent of -v)|
 
@@ -200,7 +200,7 @@ Rules apply strictly in numeric order and never overlap unexpectedly.
 Only standard Java & Picocli are used.
 
 ### 4. Fail-fast
-Errors stop execution immediately unless overridden by verbosity settings.
+Errors stop execution immediately.
 
 ### 5. Cross-platform consistency
 Same output on macOS, Linux, and Windows.

@@ -40,7 +40,7 @@ public class Console {
 
     public static void error(String message) {
         if (message != null)
-            System.err.println(Ansi.AUTO.string("@|bold,red [ERROR]|@ " + message));
+            printlnStderr(Ansi.AUTO.string("@|bold,red [ERROR]|@ " + message));
     }
 
     public static void warn(String message) {
