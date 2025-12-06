@@ -157,7 +157,7 @@ public class ConfigUtil {
 
             boolean enabled = true;
             if (enabledString == null) {
-                Console.warn("Property enabled is missing");
+                Console.warn("Property enabled is missing from: " + baseName);
                 Console.warn("Using default value of " + true);
             } else {
                 enabled = Boolean.valueOf(enabledString);
