@@ -160,7 +160,10 @@ public class ConfigUtil {
                 Console.warn("Property enabled is missing from: " + baseName);
                 Console.warn("Using default value of " + true);
             } else {
-                enabled = Boolean.valueOf(enabledString);
+                if (!"true".equalsIgnoreCase(enabledString) && !"false".equalsIgnoreCase(enabledString)) {
+                    throw new IllegalStateException("Enabled must be true/false for rule: " + baseName);
+                }
+                enabled = Boolean.parseBoolean(enabledString);
             }
             
             Rule rule = new Rule(baseName, Pattern.compile(regex), replacement, Integer.parseInt(orderString), enabled);
@@ -199,16 +202,14 @@ public class ConfigUtil {
         }
 
         if (!overwriteOutputFile) {
-            Console.error("Output file " + outputFile + " already exists");
-            Console.error("Use --force to overwrite, or specify a different --output-file");
-            throw new FileAlreadyExistsException(null);
+            throw new FileAlreadyExistsException("Output file " + outputFile + " already exists\nUse --force to overwrite, or specify a different --output-file");
         }
     }
 
     private static void validateRules(List<Rule> rules) {
         Console.debug("Validate rules");
 
-        if (rules.isEmpty() || rules.size() == 0) {
+        if (rules.isEmpty()) {
             throw new IllegalStateException("No rules loaded!");
         }
 
@@ -223,7 +224,7 @@ public class ConfigUtil {
         }
 
         if (!atLeastOneEnabled) {
-            throw new IllegalAccessError("All rules are disbled!");
+            throw new IllegalStateException("All rules are disabled!");
         }
 
         if (rules.size() != uniqueOrder.size()) {

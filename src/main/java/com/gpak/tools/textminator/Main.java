@@ -1,7 +1,6 @@
 package com.gpak.tools.textminator;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.concurrent.Callable;
 
 import com.gpak.tools.textminator.core.ToolContext;
@@ -195,24 +194,16 @@ public class Main implements Callable<Integer> {
     }
 
     private static boolean isInteractive() {
-        Console.debug("Check if is in interactive mode");
+    Console.debug("Check if in interactive mode");
 
-        try {
-            // pipe or redirect => stdin has data
-            if (System.in.available() > 0) {
-                Console.debug("Not in interactive mode. Pipe or redirect");
-                return false;
-            }
-        } catch (IOException ignored) {}
+    boolean interactive = System.console() != null;
 
-        // console exists => interactive terminal
-        if (System.console() != null) {
-            Console.debug("It's in interactive mode. Terminal");
-            return true;
-        }
-
-        // fallback: very likely piped/redirected
-        Console.debug("Not in interactive mode. Pipe or redirect");
-        return false;
+    if (interactive) {
+        Console.debug("Interactive mode detected (console available)");
+    } else {
+        Console.debug("Non-interactive mode detected (no console)");
     }
+
+    return interactive;
+}
 }

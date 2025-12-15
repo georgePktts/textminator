@@ -21,7 +21,7 @@ class SanitizerTest {
         Rule email = new Rule("email", Pattern.compile("[\\w.+-]+@[\\w-]+\\.[\\w.-]+"), "<EMAIL>", 1, true);
         Rule uuid = new Rule("uuid", Pattern.compile("\\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}\\b"), "<UUID>", 2, true);
         Rule ipv4 = new Rule("ipv4", Pattern.compile("\\b(?:(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)\\.){3}(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)\\b"), "<IPV4>", 3, true);
-        Rule ipv6 = new Rule("ipv6", Pattern.compile("\\b[0-9a-fA-F:]{2,39}\\b"), "<IPV6>", 4, true);        
+        Rule ipv6 = new Rule("ipv6", Pattern.compile("\\b(?=[0-9A-Fa-f:]{2,39}\\b)(?=(?:.*:){2,})[0-9A-Fa-f:]+\\b"), "<IPV6>", 4, true);        
     
         ArrayList<Rule> rules = new ArrayList<>();
         rules.add(email);

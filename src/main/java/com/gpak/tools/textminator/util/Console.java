@@ -33,29 +33,30 @@ public class Console {
      * 
      * @param message
      */
-    private static void printlnStderr(String message) {
-        if (!isQuiet)
-            System.err.println(message);
+    private static void printlnStderr(String prefix, String message) {
+        if (isQuiet) return;
+
+        for (String line : message.split("\\R"))
+            System.err.println(prefix + line);
     }
 
     public static void error(String message) {
-        if (message != null)
-            printlnStderr(Ansi.AUTO.string("@|bold,red [ERROR]|@ " + message));
+        printlnStderr(Ansi.AUTO.string("@|bold,red [ERROR]|@ "), message);
     }
 
     public static void warn(String message) {
         if (verboseLevel() >= 1)
-            printlnStderr(Ansi.AUTO.string("@|bold,yellow [WARNING]|@ " + message));
+            printlnStderr(Ansi.AUTO.string("@|bold,yellow [WARNING]|@ "), message);
     }
 
     public static void info(String message) {
         if (verboseLevel() >= 2)
-            printlnStderr(Ansi.AUTO.string("@|bold,green [INFO]|@ " + message));
+            printlnStderr(Ansi.AUTO.string("@|bold,green [INFO]|@ "), message);
     }
 
     public static void debug(String message) {
         if (verboseLevel() >= 3)
-            printlnStderr(Ansi.AUTO.string("@|bold,blue [DEBUG]|@ " + message));
+            printlnStderr(Ansi.AUTO.string("@|bold,blue [DEBUG]|@ "), message);
     }
 
     public static void debug(Exception e) {
@@ -65,7 +66,7 @@ public class Console {
 
     public static void trace(String message) {
         if (isTrace)
-            printlnStderr(Ansi.AUTO.string("@|bold,magenta [TRACE]|@ " + message));
+            printlnStderr(Ansi.AUTO.string("@|bold,magenta [TRACE]|@ "), message);
     }
 
     /**
@@ -74,7 +75,7 @@ public class Console {
      * @param message
      */
     public static void stats(String message) {
-        printlnStderr(Ansi.AUTO.string("@|bold,green [STATS]|@ " + message));
+        printlnStderr(Ansi.AUTO.string("@|bold,green [STATS]|@ "), message);
     }
 
     /**
@@ -83,7 +84,7 @@ public class Console {
      * @param message
      */
     public static void config(String message) {
-        printlnStderr(Ansi.AUTO.string("@|bold,green [CONFIG]|@ " + message));
+        printlnStderr(Ansi.AUTO.string("@|bold,green [CONFIG]|@ "), message);
     }
 
     /**

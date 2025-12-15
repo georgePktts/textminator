@@ -98,10 +98,33 @@ txmtr -i input.txt -o output.txt
 |`-V, --version`|Print version and exit|
 
 
+## Output behavior
+
+`textminator` writes the processed (sanitized) text to **stdout**.
+
+All informational messages, warnings, and errors are written to **stderr**.
+This makes the tool safe to use in pipelines and scripts.
+
+
+## Disclaimer
+
+`textminator` performs anonymization based on user-defined rules (e.g. regular expressions).
+The effectiveness and correctness of the anonymization fully depend on the quality and completeness of these rules.
+
+textminator is provided "as is", without warranty of any kind.
+It is a best-effort tool and may not detect or anonymize all sensitive data.
+Always review and validate the output before using it in production or sharing logs externally.
+
+
 ## Examples
 Process text from stdin to stdout
 ```bash
 cat input.txt | txmtr
+```
+
+Capture logs separately
+```bash
+cat input.txt | txmtr -s > sanitized.log 2> textminator.log
 ```
 
 Sanitize a file to stdout
@@ -141,8 +164,7 @@ Each rule shares the same prefix:
 <name>.order         # Required (lower = executed first)
 <name>.enabled       # Optional (default: true)
 ```
-Rules execute in ascending order based on their `<name>.order` property.
-Order values must be unique across rules.
+Rules are applied in ascending order by `<name>.order`. If multiple rules share the same order, the tool emits a warning and applies those rules in alphabetical order by `<name>`.
 
 ### Default rules
 
@@ -162,8 +184,8 @@ ipv4.replacement=<IPv4>
 ipv4.order=3
 ipv4.enabled=true
 
-# Default: fast & broad IPv6 detection
-ipv6.regex=\\b[0-9a-fA-F:]{2,39}\\b
+# Default: Super fast heuristic: must contain at least 2 colons
+ipv6.regex=\\b(?=[0-9A-Fa-f:]{2,39}\\b)(?=(?:.*:){2,})[0-9A-Fa-f:]+\\b
 # Alternative: stricter RFC-like IPv6
 # NOTE: This is significantly slower (~40–50% slower in benchmarks)
 #ipv6.regex=\b(?:fe80:(?::[0-9A-Fa-f]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(?:ffff(?::0{1,4}){0,1}:){0,1}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}|(?:[0-9A-Fa-f]{1,4}:){1,4}:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}|(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?:(?::[0-9A-Fa-f]{1,4}){1,6})|:(?:(?::[0-9A-Fa-f]{1,4}){1,7}|:))\b
@@ -171,6 +193,8 @@ ipv6.replacement=<IPV6>
 ipv6.order=4
 ipv6.enabled=true
 ```
+**IMPORTANT:** The default IPv6 rule is heuristic (fast) and may produce false positives
+in hex-heavy text (e.g. timestamps or identifiers). For stricter matching, enable the RFC-like IPv6 regex (slower).
 
 ### Configuration file locations
 
@@ -214,7 +238,7 @@ Same output on macOS, Linux, and Windows.
 
 
 ## Benchmark
-The following benchmark was executed on a MacBook Pro M1 (16GB RAM) using a synthetic log file generated specifically for performance testing.
+The following benchmark was executed on a MacBook Pro M1 (16GB RAM) using a synthetic log file generated specifically for performance testing using the default rules.
 
 ### Test File:
 * Size: 2.1 GB
@@ -229,8 +253,7 @@ time txmtr -i big_test_file.log -o output.log -sf
 ### Results
 ![textminator stats](assets/images/stats.png)
 **Note:** Benchmark numbers may vary depending on JVM version, system load and OS-level caching.<br>
-**Benchmark environment:** macOS 15, MacBook Pro M1 (16GB), OpenJDK 23. `txtminator` started with default rules.<br>
-**Benchmark configuration:** `txtminator` running with the 4 default rules (email, UUID, IPv4, IPv6)<br>
+**Benchmark environment:** macOS 15, MacBook Pro M1 (16GB), OpenJDK 23. `txtminator` started with default rules (email, UUID, IPv4, IPv6).
 
 ### Interpretation
 - Total (real) time: 206.7 s
@@ -242,8 +265,7 @@ time txmtr -i big_test_file.log -o output.log -sf
 - Total regex operations: >10 million replacements
 
 ### Summary
-`textminator` is CPU-bound rather than I/O-bound.<br>
-Almost all processing time is spent in the regex engine, which is expected for a single-threaded Java CLI applying multiple regex-based replacement operations per line of a multi-gigabyte file.
+`textminator` is CPU-bound rather than I/O-bound. Almost all processing time is spent in the regex engine, which is expected for a single-threaded Java CLI applying multiple regex-based replacement operations per line of a multi-gigabyte file.
 
 These results demonstrate solid real-world performance and confirm that `textminator` can efficiently process large log files without significant memory overhead.
 
