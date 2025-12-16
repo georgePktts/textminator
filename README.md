@@ -291,3 +291,11 @@ Same behaviour across Linux, macOS, and Windows.
 
 ### 5. No scripting knowledge required
 Anyone can modify the `.properties` file and instantly change behaviour.
+
+## Third-party libraries
+
+This project uses the following third-party libraries:
+
+- **Picocli** – Command line parsing for Java  
+Licensed under the Apache License, Version 2.0  
+https://picocli.info
