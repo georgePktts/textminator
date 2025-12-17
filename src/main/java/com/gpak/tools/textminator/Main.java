@@ -21,21 +21,25 @@ import picocli.CommandLine.Option;
     descriptionHeading = "%n@|bold Description:|@%n",
     description = "@|bold ${COMMAND-NAME}|@ is a CLI tool that replaces sensitive data — such as " +
         "emails, IP addresses, and custom patterns — from files or stdin. " +
-        "It supports files, piping, and an optional interactive mode (exit with " +
-        "Ctrl+D on Unix/macOS or Ctrl+Z on Windows).%n"+
+        "It supports files, piping, and an optional interactive mode for testing and " +
+        "validating rules (exit with Ctrl+D on Unix/macOS or Ctrl+Z on Windows).%n"+
         "%n" +
         "The tool is fully extensible through a configuration file, allowing "+
-        "users to define custom regex patterns and replacement values to " +
-        "replace any type of text.%n" +
+        "users to define custom regex patterns and replacement values for any type of text.%n" +
+        "%n" +
+        "Input and output are processed as UTF-8 encoded text. Support for " +
+        "additional encodings may be added in a future release.\n" +
         "%n" +
         "@|bold Configuration:|@%n" +
-        "The tool uses the following order when loading the config file:" +
+        "Configuration loading order (highest priority first):" +
         "%n" +
-        "  custom      use file provided via --config%n" +
-        "  jar         search for ${COMMAND-NAME}.properties next to the JAR%n" +
-        "  (default)   built-in configuration file%n" +
+        "  1. --config option%n" +
+        "  2. ${COMMAND-NAME}.properties next to the JAR%n" +
+        "  3. built-in default configuration (default if non of the above found)%n" +
         "%n" +
         "To inspect the final loaded configuration with the --config-info option.%n" +
+        "To create a custom configuration file use --config-example option and direct " +
+        "the output to a file.%n" +
         "%n" +
         "@|bold Logging:|@%n" +
         "Verbosity controls the amount of diagnostic output:" +
@@ -47,7 +51,7 @@ import picocli.CommandLine.Option;
         "%n" +
         "The --trace option provides low-level rule tracing operates independently " +
         "of -v.%n" +
-        "Warning: This option produces extremely verbose output, significantly " +
+        "@|bold Warning:|@ This option produces extremely verbose output, significantly " +
         "affecting performance",
     optionListHeading = "%n@|bold Options:|@",
     sortOptions = false,

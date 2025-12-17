@@ -19,15 +19,12 @@ regex-based transformations without modifying or recompiling the tool.
 - **Dry-run mode** to preview replacements
 - **Per-rule statistics** (`--stats`)
 - **Verbose and debug modes** (up to `-vvv`)
-- **Low-level tracing** of rule matches (`--trace`)
-- **Config inspection** (`--config-info`, `--config-example`)
 - **Colorized output**, automatically disabled when piped
-- **Interactive mode exit** using Ctrl+D (Unix) or Ctrl+Z (Windows)
 - **Easily extensible** with new rules—no code changes required
 
 
 ## Installation
-Currently, textminator is distributed as source code.
+Currently, `textminator` is distributed as source code.
 
 ### Requirements
 - **Java 17+**
@@ -40,13 +37,6 @@ mvn clean package
 
 
 ## Usage
-### Command syntax (from `--help`)
-```bash
-textminator [[-c=<userConfigFile>] [--config-example] [--config-info]]
-            [[-i=<inputFile>] [-o=<outputFile>] [-f]] [[-s] [--dry-run]
-            [-q] [-v]... [--trace] [-h] [-V]]
-```
-
 ### Run directly
 ```bash
 java -jar textminator.jar
@@ -55,10 +45,8 @@ java -jar textminator.jar
 ### Or create a shell alias
 ```bash
 alias textminator="java -jar /path/to/textminator.jar"
-```
 
-### For convenience, you can create a short alias:
-```bash
+# For convenience, you can create a short alias:
 alias txmtr="java -jar /path/to/textminator.jar"
 ```
 
@@ -67,53 +55,11 @@ alias txmtr="java -jar /path/to/textminator.jar"
 txmtr -i input.txt -o output.txt
 ```
 
-## Input Options
-### Configuration
-|Option|Description|
-|------|-----------|
-|`-c, --config <file>`|Path to custom config file|
-|`--config-example`|Print an example configuration file and exit|
-|`--config-info`|Print the effective loaded configuration and exit|
-
-### Input / Output
-|Option|Description|
-|------|-----------|
-|`-i, --input <file>`|Input file (default: stdin)|
-|`-o, --output <file>`|Output file (default: stdout)|
-|`-f, --force`|Overwrite output file if already exists|
-
-### Diagnostics & Logging
-|Option|Description|
-|------|-----------|
-|`-s, --stats`|Print per-rule match statistics after processing|
-|`--dry-run`|Same as --stats but without writing output|
-|`-q, --quiet`|Suppress all diagnostic output including errors|
-|`-v`|Increase verbosity; repeat up to 3 times (-vvv)|
-|`--trace`|Very verbose low-level rule tracing (independent of -v)|
-
-### Other
-|Option|Description|
-|------|-----------|
-|`-h, --help`|Print help and exit|
-|`-V, --version`|Print version and exit|
-
-
-## Output behavior
-
-`textminator` writes the processed (sanitized) text to **stdout**.
-
-All informational messages, warnings, and errors are written to **stderr**.
-This makes the tool safe to use in pipelines and scripts.
-
-
-## Disclaimer
-
-`textminator` performs anonymization based on user-defined rules (e.g. regular expressions).
-The effectiveness and correctness of the anonymization fully depend on the quality and completeness of these rules.
-
-textminator is provided "as is", without warranty of any kind.
-It is a best-effort tool and may not detect or anonymize all sensitive data.
-Always review and validate the output before using it in production or sharing logs externally.
+### Behavior
+- Reads from files or stdin
+- Writes sanitized output to stdout
+- Logs and diagnostics go to stderr
+- Input and output are processed as UTF-8 encoded text
 
 
 ## Examples
@@ -154,7 +100,8 @@ txmtr --config myrules.properties -i input.txt
 
 
 ## Configuration
-The tool uses a simple `.properties` file that defines sanitization rules.
+The tool uses a simple `.properties` file that defines sanitization rules.  
+For full Configuration see [MANUAL.md](MANUAL.md).
 
 ### Rule Definition Model
 Each rule shares the same prefix:
@@ -165,36 +112,6 @@ Each rule shares the same prefix:
 <name>.enabled       # Optional (default: true)
 ```
 Rules are applied in ascending order by `<name>.order`. If multiple rules share the same order, the tool emits a warning and applies those rules in alphabetical order by `<name>`.
-
-### Default rules
-
-```properties
-email.regex=[\w.+-]+@[\w-]+\.[\w.-]+
-email.replacement=<EMAIL>
-email.order=1
-email.enabled=true
-
-uuid.regex=\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}\b
-uuid.replacement=<UUID>
-uuid.order=2
-uuid.enabled=true
-
-ipv4.regex=\b(?:(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\b
-ipv4.replacement=<IPv4>
-ipv4.order=3
-ipv4.enabled=true
-
-# Default: Super fast heuristic: must contain at least 2 colons
-ipv6.regex=\\b(?=[0-9A-Fa-f:]{2,39}\\b)(?=(?:.*:){2,})[0-9A-Fa-f:]+\\b
-# Alternative: stricter RFC-like IPv6
-# NOTE: This is significantly slower (~40–50% slower in benchmarks)
-#ipv6.regex=\b(?:fe80:(?::[0-9A-Fa-f]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(?:ffff(?::0{1,4}){0,1}:){0,1}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}|(?:[0-9A-Fa-f]{1,4}:){1,4}:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}|(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?:(?::[0-9A-Fa-f]{1,4}){1,6})|:(?:(?::[0-9A-Fa-f]{1,4}){1,7}|:))\b
-ipv6.replacement=<IPV6>
-ipv6.order=4
-ipv6.enabled=true
-```
-**IMPORTANT:** The default IPv6 rule is heuristic (fast) and may produce false positives
-in hex-heavy text (e.g. timestamps or identifiers). For stricter matching, enable the RFC-like IPv6 regex (slower).
 
 ### Configuration file locations
 
@@ -211,86 +128,12 @@ in hex-heavy text (e.g. timestamps or identifiers). For stricter matching, enabl
 |1|Processing error|
 
 
-## Design Philosophy
-`textminator` follows a few core principles:
+## Disclaimer
 
-### 1. Predictability over magical behavior
-Rules apply strictly in numeric order and never overlap unexpectedly.
+`textminator` performs anonymization based on user-defined rules (e.g. regular expressions). The effectiveness and correctness of the anonymization fully depend on the quality and completeness of these rules.
 
-### 2. Transparency
-`--stats`, `--dry-run`, and `--trace` are designed to show exactly how the tool behaves.
+`textminator` is provided "as is", without warranty of any kind. It is a best-effort tool and may not detect or anonymize all sensitive data. Always review and validate the output before using it in production or sharing logs externally.
 
-### 3. Minimal dependencies
-Only standard Java & Picocli are used.
-
-### 4. Fail-fast
-Errors stop execution immediately.
-
-### 5. Cross-platform consistency
-Same output on macOS, Linux, and Windows.
-
-
-## Performance Notes
-- The tool loads all rules into memory once and applies them sequentially.
-- Regex performance depends on complexity of user-defined expressions.
-- `--trace` dramatically slows down processing (intended for debugging only).
-- Piping through stdin avoids I/O overhead for large files.
-
-
-## Benchmark
-The following benchmark was executed on a MacBook Pro M1 (16GB RAM) using a synthetic log file generated specifically for performance testing using the default rules.
-
-### Test File:
-* Size: 2.1 GB
-* Lines: 5,000,000
-* Content: Random text containing UUIDs, IPv4, IPv6 and email patterns
-* Rules: 4 regex replacement rules (from built-in config) applied to every line
-
-### Command used:
-```bash
-time txmtr -i big_test_file.log -o output.log -sf
-```
-### Results
-![textminator stats](assets/images/stats.png)
-**Note:** Benchmark numbers may vary depending on JVM version, system load and OS-level caching.<br>
-**Benchmark environment:** macOS 15, MacBook Pro M1 (16GB), OpenJDK 23. `txtminator` started with default rules (email, UUID, IPv4, IPv6).
-
-### Interpretation
-- Total (real) time: 206.7 s
-- User CPU time: ~200 s → the majority of the processing time is spent inside the regex engine
-- System time: ~4.4 s → very low I/O overhead
-- CPU usage: 98% → fully saturates one CPU core (single-threaded stream processing)
-- End-to-end throughput: ~10.4 MiB/s
-- Lines processed: ~24,000 lines/s
-- Total regex operations: >10 million replacements
-
-### Summary
-`textminator` is CPU-bound rather than I/O-bound. Almost all processing time is spent in the regex engine, which is expected for a single-threaded Java CLI applying multiple regex-based replacement operations per line of a multi-gigabyte file.
-
-These results demonstrate solid real-world performance and confirm that `textminator` can efficiently process large log files without significant memory overhead.
-
-
-## Why textminator?
-There are other tools that manipulate text (sed, awk, grep), but:
-
-### 1. Regex readability
-You can describe sanitization logic in a simple configuration file—not inline,
-not escaped inside a shell, and not inside long sed commands.
-
-### 2. Order-based rule execution
-Text is sanitized in deterministic order based on rule priority.  
-This avoids cascaded replacements or regex conflicts.
-
-### 3. Multi-platform consistency
-Same behaviour across Linux, macOS, and Windows.
-
-### 4. Diagnostics for debugging
-- Detailed rule hit counts  
-- Dry-run mode  
-- Tracing of rule-by-rule matching  
-
-### 5. No scripting knowledge required
-Anyone can modify the `.properties` file and instantly change behaviour.
 
 ## Third-party libraries
 
@@ -299,3 +142,5 @@ This project uses the following third-party libraries:
 - **Picocli** – Command line parsing for Java  
 Licensed under the Apache License, Version 2.0  
 https://picocli.info
+
+For advanced usage, benchmarks, design notes and full configuration, see [MANUAL.md](MANUAL.md)
