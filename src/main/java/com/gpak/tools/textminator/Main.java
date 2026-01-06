@@ -198,16 +198,16 @@ public class Main implements Callable<Integer> {
     }
 
     private static boolean isInteractive() {
-    Console.debug("Check if in interactive mode");
+        Console.debug("Check if in interactive mode");
 
-    boolean interactive = System.console() != null;
+        boolean interactive = System.console() != null;
 
-    if (interactive) {
-        Console.debug("Interactive mode detected (console available)");
-    } else {
-        Console.debug("Non-interactive mode detected (no console)");
+        if (interactive) {
+            Console.debug("Interactive mode detected (console available)");
+        } else {
+            Console.debug("Non-interactive mode detected (no console)");
+        }
+
+        return interactive;
     }
-
-    return interactive;
-}
 }

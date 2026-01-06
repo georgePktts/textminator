@@ -63,7 +63,7 @@ public class TextminatorCommand {
             while ((line = reader.readLine()) != null) {
                 context.incrementTotalNumberOfLines();
 
-                Console.trace("Sanitize line: " + context.getTotalNumberOfLines());
+                Console.trace("Sanitizing line: " + context.getTotalNumberOfLines());
                 LineResult lineResult = sanitizer.sanitizeLine(line);
 
                 if (!context.getDiagnosticsGroup().isDryRun) {
