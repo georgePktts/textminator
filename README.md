@@ -30,7 +30,12 @@ Currently, `textminator` is distributed as source code.
 - **Java 17+**
 - **Maven**
 
-### Build from Source
+### Download Pre-built JAR
+```bash
+curl -L https://github.com/georgePktts/textminator/releases/latest/download/textminator.jar
+```
+
+### Or Build from Source
 ```bash
 mvn clean package
 ```
